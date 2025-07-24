@@ -33,7 +33,7 @@ public class DepartmentControllerTest {
 
     @Test
     public void testCreateDepartment_Success() {
-        // ✅ Removed the invalid when(mockDepartment.getId())
+
         when(departmentService.createDepartment(mockDepartment)).thenReturn(mockDepartment);
 
         ResponseEntity<String> response = departmentController.createDepartment(mockDepartment);

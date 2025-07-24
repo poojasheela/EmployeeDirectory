@@ -25,25 +25,25 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(EmployeeNotFoundException.class)
     public ResponseEntity<Object> handleEmployeeNotFoundException(EmployeeNotFoundException ex) {
-        log.error("Employee not found: {}", ex.getMessage());
+        log.error("Employee not found: ",ex);
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<Object> handleInvalidRequest(InvalidRequestException ex) {
-        log.error("Invalid request: {}", ex.getMessage());
+        log.error("Invalid request: ",ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     @ExceptionHandler(DataConflictException.class)
     public ResponseEntity<Object> handleConflict(DataConflictException ex) {
-        log.error("Conflict: {}", ex.getMessage());
+        log.error("Conflict: ", ex);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleAllExceptions(Exception ex) {
-        log.error("Unexpected error: {}", ex.getMessage());
+        log.error("Unexpected error: ", ex);
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -65,7 +65,7 @@ class EmployeeMapperTest {
 
         assertEquals("Anna", emp.getName());
         assertEquals("anna@example.com", emp.getEmail());
-        assertNull(emp.getDepartment()); // department is assigned manually in service
+        assertNull(emp.getDepartment());
     }
 
 
