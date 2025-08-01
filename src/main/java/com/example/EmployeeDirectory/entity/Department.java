@@ -13,8 +13,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -30,11 +28,6 @@ public class Department {
 
     @Column(unique = true, nullable = false)
     private String name;
-
-    @OneToMany(mappedBy = "department")
-    @JsonManagedReference
-    private List<Employee> employees;
-
 
     @CreationTimestamp
     private LocalDateTime createdTimestamp;
