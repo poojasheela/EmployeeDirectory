@@ -2,36 +2,59 @@ package com.example.EmployeeDirectory.controller;
 
 
 import com.example.EmployeeDirectory.dto.DepartmentDTO;
+import com.example.EmployeeDirectory.response.ApiResponse;
 import com.example.EmployeeDirectory.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Optional;
 
-@RestController
-@RequestMapping("/departments")
-@RequiredArgsConstructor
 @Slf4j
+@RestController
+@RequestMapping("/department")
 public class DepartmentController {
+
     @Autowired
-    DepartmentService departmentService;
+    private DepartmentService departmentService;
 
     @PostMapping("/add")
-    public ResponseEntity<String> createDepartment(@Valid @RequestBody DepartmentDTO dto) {
-        DepartmentDTO created = departmentService.createDepartment(dto);
-        return new ResponseEntity<>("Department created with ID: " + created.getId(), HttpStatus.CREATED);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse createDepartment(@Valid @RequestBody DepartmentDTO dto) {
+        return departmentService.create(dto);
     }
 
-    @GetMapping("/findAll")
-    public ResponseEntity<List<DepartmentDTO>> getAllDepartments() {
-        List<DepartmentDTO> departments = departmentService.getAllDepartments();
-        return ResponseEntity.ok(departments);
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse updateDepartment(@PathVariable Integer id, @Valid @RequestBody DepartmentDTO dto) {
+        return departmentService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse deleteDepartment(@PathVariable Integer id) {
+        return departmentService.delete(id);
+    }
+
+
+    @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ApiResponse getAllDepartments() {
+        return departmentService.getAll();
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ApiResponse getDepartmentById(@PathVariable Integer id) {
+        return departmentService.getById(id);
+    }
+
+    @GetMapping("/byName")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ApiResponse getByName(@RequestParam Optional<String> name) {
+        return departmentService.getByName(name);
     }
 }
-
-

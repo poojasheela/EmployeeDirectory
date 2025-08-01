@@ -4,15 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class DepartmentDTO {
 
-    private Long id;
-
-    @NotBlank(message = "Department name cannot be blank")
+    @NotBlank(message = "Department name must not be blank")
     private String name;
 }
-

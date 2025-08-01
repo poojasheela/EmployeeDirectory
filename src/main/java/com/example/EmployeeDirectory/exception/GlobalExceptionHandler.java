@@ -1,49 +1,41 @@
 package com.example.EmployeeDirectory.exception;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import com.example.EmployeeDirectory.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-@ControllerAdvice
-@Slf4j
-
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException ex) {
-        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .collect(Collectors.toList());
-
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
-    }
-    @ExceptionHandler(EmployeeNotFoundException.class)
-    public ResponseEntity<Object> handleEmployeeNotFoundException(EmployeeNotFoundException ex) {
-        log.error("Employee not found: ",ex);
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-
     @ExceptionHandler(InvalidRequestException.class)
-    public ResponseEntity<Object> handleInvalidRequest(InvalidRequestException ex) {
-        log.error("Invalid request: ",ex);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<ApiResponse> handleInvalid(InvalidRequestException ex) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(ex.getMessage(), 400, null));
+    }
+
+    @ExceptionHandler(EmployeeNotFoundException.class)
+    public ResponseEntity<ApiResponse> notFound(EmployeeNotFoundException ex) {
+        return ResponseEntity.status(404).body(ApiResponse.error(ex.getMessage(), 404, null));
     }
 
     @ExceptionHandler(DataConflictException.class)
-    public ResponseEntity<Object> handleConflict(DataConflictException ex) {
-        log.error("Conflict: ", ex);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    public ResponseEntity<ApiResponse> conflict(DataConflictException ex) {
+        return ResponseEntity.status(409).body(ApiResponse.error(ex.getMessage(), 409, null));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse> validation(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = ex.getBindingResult().getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+        return ResponseEntity.badRequest().body(ApiResponse.error("Validation failed", 400, errors));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleAllExceptions(Exception ex) {
-        log.error("Unexpected error: ", ex);
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ApiResponse> generic(Exception ex) {
+        return ResponseEntity.status(500).body(ApiResponse.error("Internal server error", 500, null));
     }
 }

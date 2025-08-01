@@ -1,59 +1,70 @@
 package com.example.EmployeeDirectory.controller;
 
-
 import com.example.EmployeeDirectory.dto.EmployeeDTO;
+import com.example.EmployeeDirectory.response.ApiResponse;
 import com.example.EmployeeDirectory.service.EmployeeService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Optional;
 
-import java.util.List;
-
-@RestController
-@RequiredArgsConstructor
-@RequestMapping("/employees")
 @Slf4j
+@RestController
+@EnableWebSecurity
+@EnableMethodSecurity
+@RequestMapping("/employee")
 public class EmployeeController {
+
     @Autowired
-    EmployeeService service;
+    private EmployeeService employeeService;
+
 
     @PostMapping("/add")
-    public ResponseEntity<String> createEmployee(@Valid @RequestBody EmployeeDTO dto) {
-        EmployeeDTO created = service.createEmployee(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Employee created with name: " + created.getFullName());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse createEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) {
+        return employeeService.create(employeeDTO);
     }
 
-    @GetMapping("/findAll")
-    public ResponseEntity<List<EmployeeDTO>> fetchAllEmployees() {
-        List<EmployeeDTO> employees = service.fetchAllEmployees();
-        log.info("Fetched {} employees", employees.size());
-        return ResponseEntity.ok(employees);
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse updateEmployee(@PathVariable Integer id, @Valid @RequestBody EmployeeDTO employeeDTO) {
+        return employeeService.update(id, employeeDTO);
     }
 
-    @GetMapping("/email/findByDomain/{domain}")
-    public ResponseEntity<List<EmployeeDTO>> fetchEmployeesByEmailDomain(@PathVariable String domain) {
-        return ResponseEntity.ok(service.fetchEmployeesByEmailDomain(domain));
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse deleteEmployee(@PathVariable Integer id) {
+        return employeeService.delete(id);
     }
 
-    @GetMapping("/findByName/{name}")
-    public ResponseEntity<List<EmployeeDTO>> fetchEmployeesByName(@PathVariable String name) {
-        return ResponseEntity.ok(service.fetchEmployeesByName(name));
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ApiResponse getById(@PathVariable Integer id) {
+        return employeeService.getById(id);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<String> updateEmployee(@PathVariable int id, @Valid @RequestBody EmployeeDTO dto) {
-        EmployeeDTO updated = service.updateEmployeeById(id, dto);
-        return ResponseEntity.ok("Updated details of employee with name " + updated.getFullName());
+    @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ApiResponse getAllEmployees() {
+        return employeeService.getAll();
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteEmployee(@PathVariable int id) {
-        service.deleteEmployeeById(id);
-        return ResponseEntity.ok("Employee deleted with ID: " + id);
+
+    @GetMapping("/email")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ApiResponse getByEmailDomain(@RequestParam Optional<String> domain) {
+        return employeeService.getByEmailDomain(domain);
+    }
+
+
+    @GetMapping("/name")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ApiResponse getByName(@RequestParam Optional<String> name) {
+        return employeeService.getByName(name);
     }
 }
+
