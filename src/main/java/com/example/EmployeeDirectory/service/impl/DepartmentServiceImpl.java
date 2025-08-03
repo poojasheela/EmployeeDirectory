@@ -1,12 +1,17 @@
 package com.example.EmployeeDirectory.service.impl;
 import com.example.EmployeeDirectory.dto.DepartmentDTO;
+import com.example.EmployeeDirectory.dto.EmployeeDTO;
 import com.example.EmployeeDirectory.entity.Department;
+import com.example.EmployeeDirectory.entity.Employee;
 import com.example.EmployeeDirectory.exception.DataConflictException;
 import com.example.EmployeeDirectory.exception.EmployeeNotFoundException;
 import com.example.EmployeeDirectory.exception.InvalidRequestException;
+import com.example.EmployeeDirectory.mapper.EmployeeMapper;
 import com.example.EmployeeDirectory.repository.DepartmentRepository;
+import com.example.EmployeeDirectory.repository.EmployeeRepository;
 import com.example.EmployeeDirectory.response.ApiResponse;
 import com.example.EmployeeDirectory.service.DepartmentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -15,10 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
-    @Autowired
-    private DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;
+
+
     @Override
     public ApiResponse create(DepartmentDTO dto) {
         try {
@@ -43,7 +50,6 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new InvalidRequestException("Failed to create department: " + e.getMessage());
         }
     }
-
     @Override
     public ApiResponse update(Integer id, DepartmentDTO dto) {
         try {
@@ -56,8 +62,10 @@ public class DepartmentServiceImpl implements DepartmentService {
             }
 
             department.setName(dto.getName());
-            departmentRepository.save(department);
-            return ApiResponse.success("Department updated with ID: " + id, null);
+            Department updated = departmentRepository.save(department);
+
+            DepartmentDTO responseDto = new DepartmentDTO(updated.getName());
+            return ApiResponse.success("Department updated with ID: " + updated.getId(), responseDto);
         } catch (Exception e) {
             log.error("Error updating department: {}", e.getMessage());
             throw e;

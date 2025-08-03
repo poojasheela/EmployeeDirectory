@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeDTO {
+    private Integer id;
 
     @NotBlank(message = "Name is required")
     private String name;

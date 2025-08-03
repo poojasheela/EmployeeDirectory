@@ -11,6 +11,7 @@ import com.example.EmployeeDirectory.repository.DepartmentRepository;
 import com.example.EmployeeDirectory.repository.EmployeeRepository;
 import com.example.EmployeeDirectory.response.ApiResponse;
 import com.example.EmployeeDirectory.service.EmployeeService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,11 +23,12 @@ import java.util.Optional;
 @Service
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class EmployeeServiceImpl implements EmployeeService {
 
-    @Autowired private EmployeeRepository employeeRepository;
-    @Autowired private DepartmentRepository departmentRepository;
-    @Autowired private EmployeeMapper mapper;
+    private final EmployeeRepository employeeRepository;
+    private final DepartmentRepository departmentRepository;
+    private final EmployeeMapper mapper;
 
     @Override
     public ApiResponse create(EmployeeDTO dto) {
