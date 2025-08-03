@@ -1,5 +1,6 @@
 package com.example.EmployeeDirectory.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -12,21 +13,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmployeeDTO {
 
-    private Integer id;
-
-    @NotBlank
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @NotBlank
-    @Email(message = "Invalid email format")
-    @Pattern(regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,6}$", message = "Email must be lowercase and valid format")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email format is invalid")
+    @Pattern(
+            regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,6}$",
+            message = "Email must be in lowercase and valid"
+    )
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Password is required")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    @NotBlank
+    @NotBlank(message = "Role is required")
     private String role;
 
+    @NotBlank(message = "Department name is required")
     private String departmentName;
 }

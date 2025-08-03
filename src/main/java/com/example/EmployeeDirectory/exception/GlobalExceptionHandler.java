@@ -30,9 +30,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> validation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = ex.getBindingResult().getFieldErrors()
                 .stream()
-                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a, b) -> a));
         return ResponseEntity.badRequest().body(ApiResponse.error("Validation failed", 400, errors));
     }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> generic(Exception ex) {
