@@ -1,31 +1,30 @@
 package com.example.EmployeeDirectory.service.impl;
 import com.example.EmployeeDirectory.dto.DepartmentDTO;
-import com.example.EmployeeDirectory.dto.EmployeeDTO;
 import com.example.EmployeeDirectory.entity.Department;
-import com.example.EmployeeDirectory.entity.Employee;
 import com.example.EmployeeDirectory.exception.DataConflictException;
+import com.example.EmployeeDirectory.exception.DepartmentNotFoundException;
 import com.example.EmployeeDirectory.exception.EmployeeNotFoundException;
 import com.example.EmployeeDirectory.exception.InvalidRequestException;
-import com.example.EmployeeDirectory.mapper.EmployeeMapper;
+
 import com.example.EmployeeDirectory.repository.DepartmentRepository;
-import com.example.EmployeeDirectory.repository.EmployeeRepository;
 import com.example.EmployeeDirectory.response.ApiResponse;
 import com.example.EmployeeDirectory.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
 
-
+    @Transactional(rollbackFor = DataConflictException.class)
     @Override
     public ApiResponse create(DepartmentDTO dto) {
         try {
@@ -50,11 +49,13 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new InvalidRequestException("Failed to create department: " + e.getMessage());
         }
     }
+
+    @Transactional(rollbackFor = {EmployeeNotFoundException.class, DataConflictException.class})
     @Override
     public ApiResponse update(Integer id, DepartmentDTO dto) {
         try {
             Department department = departmentRepository.findById(id)
-                    .orElseThrow(() -> new EmployeeNotFoundException("Department not found with ID: " + id));
+                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found with ID: " + id));
 
             if (!department.getName().equalsIgnoreCase(dto.getName()) &&
                     departmentRepository.existsByName(dto.getName())) {
@@ -62,16 +63,27 @@ public class DepartmentServiceImpl implements DepartmentService {
             }
 
             department.setName(dto.getName());
+
             Department updated = departmentRepository.save(department);
 
-            DepartmentDTO responseDto = new DepartmentDTO(updated.getName());
-            return ApiResponse.success("Department updated with ID: " + updated.getId(), responseDto);
-        } catch (Exception e) {
+            DepartmentDTO responseDto = new DepartmentDTO( updated.getName());
+            log.info("Updating department with ID: {}", id);
+
+            return ApiResponse.success("Department updated with name: " + updated.getName(), responseDto);
+        } catch (DepartmentNotFoundException e) {
+            log.warn("Department not found: ", e);
+            throw e;
+        } catch (DataConflictException e) {
+            log.warn("Duplicate department name: ", e);
+            throw e;
+        }
+        catch (Exception e) {
             log.error("Error updating department: {}", e.getMessage());
             throw e;
         }
     }
 
+    @Transactional(rollbackFor = EmployeeNotFoundException.class)
     @Override
     public ApiResponse delete(Integer id) {
         try {
@@ -79,6 +91,9 @@ public class DepartmentServiceImpl implements DepartmentService {
                     .orElseThrow(() -> new EmployeeNotFoundException("Department not found with ID: " + id));
             departmentRepository.delete(department);
             return ApiResponse.success("Department deleted with ID: " + id, null);
+        } catch (EmployeeNotFoundException e) {
+            log.warn("Employee not found: ", e);
+            throw e;
         } catch (Exception e) {
             log.error("Error deleting department: {}", e.getMessage());
             throw e;
@@ -91,21 +106,40 @@ public class DepartmentServiceImpl implements DepartmentService {
         return ApiResponse.success("All departments fetched", list);
     }
 
+    @Transactional(rollbackFor = EmployeeNotFoundException.class)
     @Override
     public ApiResponse getById(Integer id) {
-        Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Department not found with ID: " + id));
-        return ApiResponse.success("Department fetched with ID: " + id, department);
+        try {
+            Department department = departmentRepository.findById(id)
+                    .orElseThrow(() -> new EmployeeNotFoundException("Department not found with ID: " + id));
+
+            return ApiResponse.success("Department fetched with ID: " + id, department);
+        } catch (EmployeeNotFoundException e) {
+            log.warn("Employee not found: ", e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error deleting department: {}", e.getMessage());
+            throw e;
+        }
     }
 
+    @Transactional(rollbackFor = EmployeeNotFoundException.class)
     @Override
     public ApiResponse getByName(Optional<String> name) {
-        if (name.isPresent()) {
-            Department dept = departmentRepository.findByNameIgnoreCase(name.get())
-                    .orElseThrow(() -> new EmployeeNotFoundException("Department not found with name: " + name.get()));
-            return ApiResponse.success("Department found by name", dept);
-        } else {
-            return getAll();
+        try {
+            if (name.isPresent()) {
+                Department dept = departmentRepository.findByNameIgnoreCase(name.get())
+                        .orElseThrow(() -> new EmployeeNotFoundException("Department not found with name: " + name.get()));
+                return ApiResponse.success("Department found by name", dept);
+            } else {
+                return getAll();
+            }
+        } catch (EmployeeNotFoundException e) {
+            log.warn("Employee not found: ", e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error deleting department: {}", e.getMessage());
+            throw e;
         }
     }
 }

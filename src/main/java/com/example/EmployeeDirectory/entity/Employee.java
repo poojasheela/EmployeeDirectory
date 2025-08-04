@@ -35,7 +35,6 @@ public class Employee implements UserDetails {
     private String role;
 
     @ManyToOne
-    @JsonBackReference
     private Department department;
 
     @CreationTimestamp

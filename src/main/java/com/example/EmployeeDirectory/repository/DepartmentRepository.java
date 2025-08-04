@@ -11,3 +11,4 @@ public interface DepartmentRepository extends JpaRepository<Department, Integer>
     boolean existsByName(String name);
     Optional<Department> findByNameIgnoreCase(String name);
 }
+

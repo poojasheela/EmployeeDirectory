@@ -21,6 +21,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(404).body(ApiResponse.error(ex.getMessage(), 404, null));
     }
 
+
+    @ExceptionHandler(DepartmentNotFoundException.class)
+    public ResponseEntity<ApiResponse> notFound(DepartmentNotFoundException ex) {
+        return ResponseEntity.status(404).body(ApiResponse.error(ex.getMessage(), 404, null));
+    }
+
     @ExceptionHandler(DataConflictException.class)
     public ResponseEntity<ApiResponse> conflict(DataConflictException ex) {
         return ResponseEntity.status(409).body(ApiResponse.error(ex.getMessage(), 409, null));

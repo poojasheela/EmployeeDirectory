@@ -15,4 +15,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     @Query("SELECT e FROM Employee e WHERE e.contactEmail LIKE %:domain")
     List<Employee> findByEmailDomain(@Param("domain") String domain);
     Optional<Employee> findByFullName(String name);
+
 }

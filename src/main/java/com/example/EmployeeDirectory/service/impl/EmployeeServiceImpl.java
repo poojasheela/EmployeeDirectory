@@ -13,13 +13,13 @@ import com.example.EmployeeDirectory.response.ApiResponse;
 import com.example.EmployeeDirectory.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+
 @Service
 @Transactional
 @Slf4j
@@ -30,6 +30,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final EmployeeMapper mapper;
 
+    @Transactional(rollbackFor = {InvalidRequestException.class, DataConflictException.class})
     @Override
     public ApiResponse create(EmployeeDTO dto) {
         try {
@@ -53,8 +54,8 @@ public class EmployeeServiceImpl implements EmployeeService {
             EmployeeDTO responseDTO = mapper.toDTO(saved);
             return ApiResponse.success("Employee created", responseDTO);
 
-        } catch (DataConflictException | InvalidRequestException e) {
-            log.warn("Validation error: ", e);
+        } catch (DataConflictException e) {
+            log.warn("Conflicts when creating employee", e);
             throw e;
         } catch (Exception e) {
             log.error("Unexpected error during employee creation", e);
@@ -62,6 +63,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
+    @Transactional(rollbackFor = {EmployeeNotFoundException.class, InvalidRequestException.class})
     @Override
     public ApiResponse update(Integer id, EmployeeDTO dto) {
         try {
@@ -83,6 +85,8 @@ public class EmployeeServiceImpl implements EmployeeService {
             EmployeeDTO responseDTO = mapper.toDTO(updated);
             return ApiResponse.success("Employee updated", responseDTO);
 
+
+
         } catch (EmployeeNotFoundException | InvalidRequestException e) {
             log.warn("Validation error: ", e);
             throw e;
@@ -92,6 +96,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
+
+    @Transactional(rollbackFor = EmployeeNotFoundException.class)
     @Override
     public ApiResponse delete(Integer id) {
         try {
@@ -108,6 +114,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
+
+    @Transactional(rollbackFor = EmployeeNotFoundException.class)
     @Override
     public ApiResponse getById(Integer id) {
         try {
@@ -123,6 +131,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
+
+    @Transactional(rollbackFor = EmployeeNotFoundException.class)
     @Override
     public ApiResponse getByEmailDomain(Optional<String> domain) {
         try {
@@ -145,6 +155,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
+
+    @Transactional(rollbackFor = EmployeeNotFoundException.class)
     @Override
     public ApiResponse getByName(Optional<String> name) {
         try {
