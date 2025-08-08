@@ -13,146 +13,184 @@ import com.example.EmployeeDirectory.repository.EmployeeRepository;
 import com.example.EmployeeDirectory.service.impl.EmployeeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-
-import java.util.*;
-
+import com.example.EmployeeDirectory.response.Response;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class EmployeeServiceImplTest {
 
-    @InjectMocks
-    private EmployeeServiceImpl employeeService;
+    @Mock private EmployeeRepository employeeRepository;
+    @Mock private DepartmentRepository departmentRepository;
+    @Mock private EmployeeMapper mapper;
 
-    @Mock
-    private EmployeeRepository employeeRepository;
-
-    @Mock
-    private DepartmentRepository departmentRepository;
-
-    @Mock
-    private EmployeeMapper mapper;
+    @InjectMocks private EmployeeServiceImpl employeeService;
 
     private Employee employee;
-    private EmployeeDTO employeeDTO;
     private Department department;
+    private EmployeeDTO dto;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    void init() {
+        department = new Department(9, "HR", LocalDateTime.now(), LocalDateTime.now());
 
-        department = new Department();
-        department.setId(1L);
-        department.setName("HR");
+        employee = new Employee(6, "Mike", "mike@qrs.com", "encoded123", "USER", department,
+                LocalDateTime.now(), LocalDateTime.now());
 
-        employee = new Employee();
-        employee.setId(1);
-        employee.setName("Mike");
-        employee.setEmail("mike@example.com");
-        employee.setDepartment(department);
-
-        employeeDTO = new EmployeeDTO();
-        employeeDTO.setFullName("Mike");
-        employeeDTO.setContactEmail("mike@example.com");
-        employeeDTO.setDepartmentName("HR");
+        dto = new EmployeeDTO(null, "Mike", "mike@qrs.com", "rawpass", "USER", "HR", null, null);
     }
 
     @Test
-    void testCreateEmployee_Success() {
-        when(employeeRepository.existsByEmail("mike@example.com")).thenReturn(false);
-        when(departmentRepository.findByName("HR")).thenReturn(Optional.of(department));
-        when(mapper.toEntity(employeeDTO)).thenReturn(employee);
-        when(employeeRepository.save(employee)).thenReturn(employee);
-        when(mapper.toDTO(employee)).thenReturn(employeeDTO);
+    void testCreate_Success() {
+        when(employeeRepository.findByContactEmail(any())).thenReturn(Optional.empty());
+        when(departmentRepository.findByNameIgnoreCase("HR")).thenReturn(Optional.of(department));
+        when(employeeRepository.save(any())).thenReturn(employee);
+        when(mapper.toDTO(any())).thenReturn(dto);
 
-        EmployeeDTO saved = employeeService.createEmployee(employeeDTO);
-        assertNotNull(saved);
-        assertEquals("Mike", saved.getFullName());
+        Response res = employeeService.create(dto);
+
+        assertEquals("Employee created", res.getMessage());
+        verify(employeeRepository).save(any());
     }
 
     @Test
-    void testCreateEmployee_EmailConflict() {
-        when(employeeRepository.existsByEmail("mike@example.com")).thenReturn(true);
-        assertThrows(DataConflictException.class, () -> employeeService.createEmployee(employeeDTO));
+    void testCreate_ThrowConflict() {
+        when(employeeRepository.findByContactEmail(any())).thenReturn(Optional.of(employee));
+        assertThrows(DataConflictException.class, () -> employeeService.create(dto));
+    }
+
+
+    @Test
+    void testUpdate_Success() {
+        when(employeeRepository.findById(6)).thenReturn(Optional.of(employee));
+        when(departmentRepository.findByNameIgnoreCase("HR")).thenReturn(Optional.of(department));
+        when(employeeRepository.save(any())).thenReturn(employee);
+        when(mapper.toDTO(any())).thenReturn(dto);
+
+        Response res = employeeService.update(6, dto);
+
+        assertEquals("Employee updated", res.getMessage());
     }
 
     @Test
-    void testCreateEmployee_DepartmentNotFound() {
-        when(employeeRepository.existsByEmail("mike@example.com")).thenReturn(false);
-        when(departmentRepository.findByName("HR")).thenReturn(Optional.empty());
-        assertThrows(InvalidRequestException.class, () -> employeeService.createEmployee(employeeDTO));
+    void testUpdate_ThrowIfNotFound() {
+        when(employeeRepository.findById(99)).thenReturn(Optional.empty());
+        assertThrows(EmployeeNotFoundException.class, () -> employeeService.update(99, dto));
     }
 
     @Test
-    void testFetchAllEmployees_Success() {
-        List<Employee> list = List.of(employee);
-        when(employeeRepository.findAll()).thenReturn(list);
-        when(mapper.toDTOList(list)).thenReturn(List.of(employeeDTO));
-
-        List<EmployeeDTO> result = employeeService.fetchAllEmployees();
-        assertEquals(1, result.size());
+    void testUpdate_ThrowIfDeptMissing() {
+        when(employeeRepository.findById(6)).thenReturn(Optional.of(employee));
+        when(departmentRepository.findByNameIgnoreCase("HR")).thenReturn(Optional.empty());
+        assertThrows(InvalidRequestException.class, () -> employeeService.update(6, dto));
     }
 
     @Test
-    void testFetchEmployeesByName_Found() {
-        when(employeeRepository.findEmployeesByName("Mike")).thenReturn(List.of(employee));
-        when(mapper.toDTOList(List.of(employee))).thenReturn(List.of(employeeDTO));
-
-        List<EmployeeDTO> result = employeeService.fetchEmployeesByName("Mike");
-        assertEquals(1, result.size());
+    void testDelete_Success() {
+        when(employeeRepository.findById(6)).thenReturn(Optional.of(employee));
+        Response res = employeeService.delete(6);
+        assertEquals("Employee deleted", res.getMessage());
+        verify(employeeRepository).delete(employee);
     }
 
     @Test
-    void testFetchEmployeesByName_NotFound() {
-        when(employeeRepository.findEmployeesByName("Unknown")).thenReturn(Collections.emptyList());
-        assertThrows(EmployeeNotFoundException.class, () -> employeeService.fetchEmployeesByName("Unknown"));
+    void testDelete_ThrowIfNotFound() {
+        when(employeeRepository.findById(any())).thenReturn(Optional.empty());
+        assertThrows(EmployeeNotFoundException.class, () -> employeeService.delete(123));
     }
 
     @Test
-    void testFetchEmployeesByEmailDomain_Found() {
-        when(employeeRepository.findEmployeesByEmailDomain("example.com")).thenReturn(List.of(employee));
-        when(mapper.toDTOList(List.of(employee))).thenReturn(List.of(employeeDTO));
-
-        List<EmployeeDTO> result = employeeService.fetchEmployeesByEmailDomain("example.com");
-        assertEquals(1, result.size());
+    void testGetById_Success() {
+        when(employeeRepository.findById(6)).thenReturn(Optional.of(employee));
+        when(mapper.toDTO(any())).thenReturn(dto);
+        Response res = employeeService.getById(6);
+        assertEquals("Employee fetched", res.getMessage());
     }
 
     @Test
-    void testFetchEmployeesByEmailDomain_NotFound() {
-        when(employeeRepository.findEmployeesByEmailDomain("missing.com")).thenReturn(Collections.emptyList());
-        assertThrows(EmployeeNotFoundException.class, () -> employeeService.fetchEmployeesByEmailDomain("missing.com"));
+    void testGetById_ThrowIfNotFound() {
+        when(employeeRepository.findById(any())).thenReturn(Optional.empty());
+        assertThrows(EmployeeNotFoundException.class, () -> employeeService.getById(101));
     }
 
     @Test
-    void testUpdateEmployeeById_Success() {
-        when(employeeRepository.findById(1)).thenReturn(Optional.of(employee));
-        when(employeeRepository.existsByEmail("mike@example.com")).thenReturn(false);
-        when(departmentRepository.findByName("HR")).thenReturn(Optional.of(department));
-        when(employeeRepository.save(employee)).thenReturn(employee);
-        when(mapper.toDTO(employee)).thenReturn(employeeDTO);
-
-        EmployeeDTO updated = employeeService.updateEmployeeById(1, employeeDTO);
-        assertEquals("Mike", updated.getFullName());
+    void testGetByEmailDomain_Success() {
+        when(employeeRepository.findByEmailDomain("qrs.com")).thenReturn(List.of(employee));
+        when(mapper.toDTOList(any())).thenReturn(List.of(dto));
+        Response res = employeeService.getByEmailDomain(Optional.of("qrs.com"));
+        assertEquals("Employees fetched by domain", res.getMessage());
     }
 
     @Test
-    void testUpdateEmployeeById_NotFound() {
-        when(employeeRepository.findById(1)).thenReturn(Optional.empty());
-        assertThrows(EmployeeNotFoundException.class, () -> employeeService.updateEmployeeById(1, employeeDTO));
+    void testGetByEmailDomain_IfDomainEmpty() {
+        when(employeeRepository.findAll()).thenReturn(List.of(employee));
+        when(mapper.toDTOList(any())).thenReturn(List.of(dto));
+        Response res = employeeService.getByEmailDomain(Optional.empty());
+        assertEquals("All employees fetched", res.getMessage());
     }
 
     @Test
-    void testDeleteEmployeeById_Success() {
-        when(employeeRepository.findById(1)).thenReturn(Optional.of(employee));
-        doNothing().when(employeeRepository).delete(employee);
-
-        assertDoesNotThrow(() -> employeeService.deleteEmployeeById(1));
+    void testGetByEmailDomain_shouldThrowIfNotFound() {
+        when(employeeRepository.findByEmailDomain("xyz.com")).thenReturn(List.of());
+        assertThrows(EmployeeNotFoundException.class, () ->
+                employeeService.getByEmailDomain(Optional.of("xyz.com")));
     }
 
     @Test
-    void testDeleteEmployeeById_NotFound() {
-        when(employeeRepository.findById(1)).thenReturn(Optional.empty());
-        assertThrows(EmployeeNotFoundException.class, () -> employeeService.deleteEmployeeById(1));
+    void testGetByName_shouldSucceed() {
+        when(employeeRepository.findByFullName("Mike")).thenReturn(Optional.of(employee));
+        when(mapper.toDTO(any())).thenReturn(dto);
+        Response res = employeeService.getByName(Optional.of("Mike"));
+        assertEquals("Employee fetched", res.getMessage());
+    }
+
+    @Test
+    void testGetByName_shouldReturnAllIfBlank() {
+        when(employeeRepository.findAll()).thenReturn(List.of(employee));
+        when(mapper.toDTOList(any())).thenReturn(List.of(dto));
+        Response res = employeeService.getByName(Optional.of(" "));
+        assertEquals("All employees fetched", res.getMessage());
+    }
+
+    @Test
+    void testGetByName_IfNotFound() {
+        when(employeeRepository.findByFullName("Unknown")).thenReturn(Optional.empty());
+        assertThrows(EmployeeNotFoundException.class, () ->
+                employeeService.getByName(Optional.of("Unknown")));
+    }
+
+    @Test
+    void testGetAll_Success() {
+        when(employeeRepository.findAll()).thenReturn(List.of(employee));
+        when(mapper.toDTOList(any())).thenReturn(List.of(dto));
+        Response res = employeeService.getAll();
+        assertEquals("All employees fetched", res.getMessage());
+    }
+
+    @Test
+    void testGetAllPaginatedEmployees_Success() {
+        Page<Employee> page = new PageImpl<>(List.of(employee));
+        when(employeeRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(mapper.toDTO(any())).thenReturn(dto);
+        Response res = employeeService.getAllPaginatedEmployees(Optional.of(0), Optional.of(10));
+        assertEquals(200, res.getStatus());
+    }
+
+    @Test
+    void testGetAllPaginatedEmployees_withoutPagination() {
+        when(employeeRepository.findAll()).thenReturn(List.of(employee));
+        when(mapper.toDTO(any())).thenReturn(dto);
+        Response res = employeeService.getAllPaginatedEmployees(Optional.empty(), Optional.empty());
+        assertEquals(200, res.getStatus());
     }
 }

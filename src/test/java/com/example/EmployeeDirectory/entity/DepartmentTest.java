@@ -2,16 +2,35 @@ package com.example.EmployeeDirectory.entity;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
+import java.time.LocalDateTime;
 
-class DepartmentTest {
+
+public class DepartmentTest {
+
+    private Department department;
+
+    @BeforeEach
+    void setUp() {
+        department = new Department(1, "HR", LocalDateTime.now(), LocalDateTime.now());
+    }
 
     @Test
-    void testDepartmentConstructorAndGetters() {
-        Department dept = new Department(1L, "Finance", Collections.emptyList());
+    void testGettersAndSetters() {
+        assertEquals(1, department.getId());
+        assertEquals("HR", department.getName());
+    }
 
-        assertEquals(1L, dept.getId());
-        assertEquals("Finance", dept.getName());
-        assertTrue(dept.getEmployees().isEmpty());
+    @Test
+    void testNoArgsConstructor() {
+        Department dep = new Department();
+        assertNotNull(dep);
+    }
+
+    @Test
+    void testAllArgsConstructor() {
+        Department dep = new Department(2, "IT", LocalDateTime.now(), LocalDateTime.now());
+        assertEquals("IT", dep.getName());
     }
 }
+

@@ -6,16 +6,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
 import java.util.Optional;
+import static com.example.EmployeeDirectory.constants.Constants.ADMIN;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Configuration
 public class DataInitializer {
 
     @Bean
@@ -28,7 +26,7 @@ public class DataInitializer {
                 admin.setFullName("Admin");
                 admin.setContactEmail("admin@gmail.com");
                 admin.setPassword(passwordEncoder.encode("admin123"));
-                admin.setRole("ADMIN");
+                admin.setRole(ADMIN);
 
                 employeeRepository.save(admin);
                 log.info(" Admin user created: admin@gmail.com / admin123");
