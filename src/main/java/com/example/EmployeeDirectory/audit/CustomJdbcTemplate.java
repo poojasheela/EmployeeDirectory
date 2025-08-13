@@ -7,9 +7,6 @@ import org.springframework.stereotype.Component;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import java.sql.SQLException;
-import java.sql.Statement;
-
 @Component
 public class CustomJdbcTemplate {
 
@@ -20,24 +17,10 @@ public class CustomJdbcTemplate {
     }
 
     public void setLoggedUser(String username) {
-        jdbcTemplate.execute((ConnectionCallback<Void>) connection -> {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("SET @logged_user = '" + username + "'");
-            } catch (SQLException e) {
-                throw new RuntimeException("Error setting @logged_user: " + e.getMessage(), e);
-            }
-            return null;
-        });
+        jdbcTemplate.update("SET @logged_user = ?", username);
     }
 
     public void clearLoggedUser() {
-        jdbcTemplate.execute((ConnectionCallback<Void>) connection -> {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("SET @logged_user = NULL");
-            } catch (SQLException e) {
-                throw new RuntimeException("Error clearing @logged_user: " + e.getMessage(), e);
-            }
-            return null;
-        });
+        jdbcTemplate.update("SET @logged_user = NULL");
     }
 }
