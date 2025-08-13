@@ -68,4 +68,8 @@ public class Employee implements UserDetails {
     @Override public boolean isEnabled() {
         return true;
     }
+
+    @Column(name = "created_by", updatable = false)
+    private String createdBy;
+
 }

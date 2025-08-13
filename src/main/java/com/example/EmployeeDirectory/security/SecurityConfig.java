@@ -14,26 +14,35 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import static com.example.EmployeeDirectory.constants.Constants.*;
 
-@Configuration
+
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Configuration
 public class SecurityConfig {
+
     private final CustomAuthenticationEntryPoint customAuthEntryPoint;
     private final CustomUserDetailsServiceImpl userDetailsService;
+
+    private static final String[] SWAGGER_WHITELIST = {
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/v3/api-docs.yaml"
+    };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .requestMatchers(HttpMethod.POST, EMPLOYEE_ADD, DEPARTMENT_ADD).hasRole(ADMIN)
-                        .requestMatchers(HttpMethod.PUT, EMPLOYEE_BASE,DEPARTMENT_BASE).hasRole(ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, EMPLOYEE_BASE,DEPARTMENT_BASE).hasRole(ADMIN)
-                        .requestMatchers(HttpMethod.GET,EMPLOYEE_BASE,DEPARTMENT_BASE).hasAnyRole(ADMIN, USER)
+                        .requestMatchers(HttpMethod.PUT, EMPLOYEE_BASE, DEPARTMENT_BASE).hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, EMPLOYEE_BASE, DEPARTMENT_BASE).hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.GET, EMPLOYEE_BASE, DEPARTMENT_BASE).hasAnyRole(ADMIN, USER)
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults()).exceptionHandling(ex -> ex
-                .authenticationEntryPoint(customAuthEntryPoint));
+                .httpBasic(Customizer.withDefaults())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthEntryPoint));
 
         return http.build();
     }
@@ -43,3 +52,35 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
+//
+//@Configuration
+//@EnableMethodSecurity
+//@RequiredArgsConstructor
+//public class SecurityConfig {
+//    private final CustomAuthenticationEntryPoint customAuthEntryPoint;
+//    private final CustomUserDetailsServiceImpl userDetailsService;
+//
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(HttpMethod.POST, EMPLOYEE_ADD, DEPARTMENT_ADD).hasRole(ADMIN)
+//                        .requestMatchers(HttpMethod.PUT, EMPLOYEE_BASE,DEPARTMENT_BASE).hasRole(ADMIN)
+//                        .requestMatchers(HttpMethod.DELETE, EMPLOYEE_BASE,DEPARTMENT_BASE).hasRole(ADMIN)
+//                        .requestMatchers(HttpMethod.GET,EMPLOYEE_BASE,DEPARTMENT_BASE).hasAnyRole(ADMIN, USER)
+//                        .anyRequest().authenticated()
+//                )
+//                .httpBasic(Customizer.withDefaults()).exceptionHandling(ex -> ex
+//                .authenticationEntryPoint(customAuthEntryPoint));
+//
+//        return http.build();
+//    }
+//
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
+//}

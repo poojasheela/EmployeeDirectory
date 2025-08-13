@@ -7,11 +7,11 @@ public interface EmployeeService {
     Response update(Integer id, EmployeeDTO dto);
     Response delete(Integer id);
     Response getById(Integer id);
+    Response getByEmailDomain(Optional<String> domain);
     Response getByName(Optional<String> name);
     Response getAll();
-    Response getByEmailDomain(Optional<String> domain);
-    Response getAllPaginatedEmployees(Optional<Integer> page, Optional<Integer> size);
-
+    Response getAllPaginatedEmployees(Optional<Integer> pageOpt, Optional<Integer> sizeOpt);
 }
+
 
 
