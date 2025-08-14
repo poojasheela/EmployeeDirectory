@@ -38,9 +38,11 @@ spring:
     default-schema: employee
     table: flyway_schema_history
 
-
-
 server:
   port: 8080
   servlet:
     context-path: /ems
+
+randomuser:
+  enabled: true
+  base-url: https://randomuser.me/api/

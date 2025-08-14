@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS employee (
     department_id BIGINT,
     created_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_updated_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_by VARCHAR(255),
     PRIMARY KEY (id),
     CONSTRAINT fk_employee_department FOREIGN KEY (department_id)
         REFERENCES department (id)
 );
+
 -- Employee Audit table
 CREATE TABLE IF NOT EXISTS employee_audit (
     id BIGINT NOT NULL AUTO_INCREMENT,
@@ -31,9 +31,10 @@ CREATE TABLE IF NOT EXISTS employee_audit (
     role VARCHAR(100),
     department_id BIGINT,
     operation_type VARCHAR(10),
+    created_by VARCHAR(255),
     performed_by VARCHAR(255),
-    created_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_timestamp TIMESTAMP,
+    last_updated_timestamp TIMESTAMP,
     PRIMARY KEY (id)
 );
 
@@ -43,8 +44,9 @@ CREATE TABLE IF NOT EXISTS department_audit (
     department_id BIGINT,
     name VARCHAR(255),
     operation_type VARCHAR(10),
+    created_by VARCHAR(255),
     performed_by VARCHAR(255),
-    created_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_timestamp TIMESTAMP,
+    last_updated_timestamp TIMESTAMP,
     PRIMARY KEY (id)
 );
